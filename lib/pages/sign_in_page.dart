@@ -21,10 +21,27 @@ class _SignInPageState extends State<SignInPage> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  List<String> hints = List.empty(growable: true);
+
+  Future<List<String>?> getEmails(){
+    var results = DatabaseHelper.instance.getUserEmails();
+    return results;
+}
+
+  void initHints(){
+    getEmails().then((value) {
+      setState(() {
+        hints=value!;
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    initHints();
     return Scaffold(
+
         backgroundColor: Consts.darkColor,
         appBar: AppBar(
           elevation: 0,
@@ -77,8 +94,8 @@ class _SignInPageState extends State<SignInPage> {
                       left: 30, right: 30, top: 100, bottom: 10),
                   child: Column(
                     children: <Widget>[
-                      CustomTextField(label: 'Email', controller: emailController,),
-                      CustomTextField(label: 'Password', controller: passwordController,)
+                      CustomTextField(label: 'Email', controller: emailController, isPasswordField: false),
+                      CustomTextField(label: 'Password', controller: passwordController, isPasswordField: true,)
                     ],
                   ),
                 ),
@@ -91,11 +108,12 @@ class _SignInPageState extends State<SignInPage> {
                     onPressed: () async {
                       bool res = await _checkPasswordHash();
                       if (res) {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => MainPage(index: 0, username: emailController.text,)));
-                      }},
+                        Navigator.of(context).pushReplacement(MaterialPageRoute(
+                            builder: (context) => MainPage(index: 0, email: emailController.text)));
+                      } else {
+                        _showMessage(context, "Passwords are not the same!", "Please, check your input and try again.");
+                      }
+    },
                     child: Text(
                       "Sign in",
                       style:
@@ -124,35 +142,47 @@ class _SignInPageState extends State<SignInPage> {
                         ))
                   ],
                 ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 25),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        primary: Consts.contrastColor,
-                        fixedSize: Size(Consts.getWidth(context), 50)),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SignInPage()));
-                    },
-                    child: Text(
-                      "Profile",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                    ),
-                  ),
-                )
               ],
             )
           ],
         ));
   }
 
+  void _showMessage(BuildContext context, String message, String content) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              message,
+              style: TextStyle(
+                  fontSize: 18,),
+            ),
+            content: Text(
+              content, style: TextStyle(fontSize: 15),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'Ok'),
+                child: Text(
+                  'Ok',
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
   Future<bool> _checkPasswordHash() async{
     User? user = await DatabaseHelper.instance.findUser(emailController.text);
     if (user!=null){
       return user.passwordHash==sha512.convert(utf8.encode(passwordController.text)).toString();
+    } else {
+      _showMessage(context, "User with this email doesn't exist!", "Check your input or sign up with this email.");
     }
     return false;
   }

@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/db/db_helper.dart';
 import 'package:relax_app/models/user.dart';
@@ -80,18 +82,22 @@ class _SignUpPageState extends State<SignUpPage> {
                       CustomTextField(
                         label: 'Username',
                         controller: usernameController,
+                        isPasswordField:false,
                       ),
                       CustomTextField(
                         label: 'Email',
                         controller: emailController,
+                        isPasswordField: false,
                       ),
                       CustomTextField(
                         label: 'Password',
                         controller: passwordController,
+                        isPasswordField: true,
                       ),
                       CustomTextField(
                         label: 'Confirm password',
                         controller: confirmedPasswordController,
+                        isPasswordField: true,
                       )
                     ],
                   ),
@@ -103,12 +109,17 @@ class _SignUpPageState extends State<SignUpPage> {
                         primary: Consts.contrastColor,
                         fixedSize: Size(Consts.getWidth(context), 50)),
                     onPressed: () {
-                      if (_checkPasswords()){
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MainPage(index: 0, username: usernameController.text,)));
-                    }},
+                      if (_checkPasswords()) {
+                        Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                                builder: (context) => MainPage(
+                                      index: 0,
+                                      email: emailController.text,
+                                    )));
+                      } else {
+                        _showMessage(context, "Passwords are not the same", "Please, check your input and try again.");
+                      }
+                    },
                     child: Text(
                       "Sign up",
                       style:
@@ -143,6 +154,35 @@ class _SignUpPageState extends State<SignUpPage> {
         ));
   }
 
+  void _showMessage(BuildContext context, String message, String content) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              message,
+              style: TextStyle(
+                fontSize: 18,),
+            ),
+            content: Text(
+              content, style: TextStyle(fontSize: 15),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, 'Ok'),
+                child: Text(
+                  'Ok',
+                  style: TextStyle(
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
   bool _checkPasswords() {
     var hashFirst =
         sha512.convert(utf8.encode(passwordController.text)).toString();
@@ -158,12 +198,18 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _save() async {
+    Uint8List avatarBytes = Uint8List(1);
+    rootBundle.load("assets/image/profile_pic.jpg").then((value) {
+      avatarBytes=value.buffer.asUint8List();
+    });
     await DatabaseHelper.instance.addUser(User(
         id: await DatabaseHelper.instance.getUsersCount() + 1,
         email: emailController.text,
         username: usernameController.text,
         passwordHash: sha512
             .convert(utf8.encode(confirmedPasswordController.text))
-            .toString()));
+            .toString(),
+        isAuthorized: Consts.trueDB,
+    avatar: avatarBytes));
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:relax_app/pages/sign_in_page.dart';
-import 'package:relax_app/pages/welcome_page.dart';
+import 'package:relax_app/pages/splashscreen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,10 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
         return MaterialApp(
-          title: 'Lab2',
+          title: 'Relax app',
           debugShowCheckedModeBanner: false,
-          home: const WelcomePage(
-          ),
+          home: const SplashScreenPage(),
         );
       }
 }

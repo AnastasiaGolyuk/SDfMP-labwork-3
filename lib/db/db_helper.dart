@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -17,7 +18,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'relax_app_users.db');
+    String path = join(documentsDirectory.path, 'relax_app__users.db');
     return await openDatabase(
       path,
       version: 1,
@@ -31,7 +32,9 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY,
           username TEXT,
           email TEXT,
-          passwordHash TEXT
+          passwordHash TEXT,
+          isAuthorized INTEGER,
+          avatar BLOB
       )
       ''');
   }
@@ -45,6 +48,27 @@ class DatabaseHelper {
     return usersList;
   }
 
+  Future<List<String>?> getUserEmails() async {
+    var users = await getUsers();
+    List<String> results = List.empty(growable: true);
+    for (var element in users) {
+      results.add(element.email);
+    }
+    return results;
+  }
+
+  Future<User?> findAuthUser() async {
+    var results = await getUsers();
+    User? user;
+    for (var element in results) {
+      if (element.isAuthorized==1){
+        user=element;
+      }
+    }
+    return user;
+  }
+
+
   Future<int> getUsersCount() async {
     var results = await getUsers();
     return results.length;
@@ -56,12 +80,14 @@ class DatabaseHelper {
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
-  Future<User> findUser(String email) async {
-    Database db = await instance.database;
-    var results = await db.query('users',where: 'email = ?', whereArgs: [email]);
-    List<User> usersList = results.isNotEmpty
-        ? results.map((c) => User.fromJson(c)).toList()
-        : [];
-    return usersList.first;
+  Future<User?> findUser(String email) async {
+    var results = await getUsers();
+    User? user;
+    for (var element in results) {
+      if (element.email==email){
+        user=element;
+      }
+    }
+    return user;
   }
 }

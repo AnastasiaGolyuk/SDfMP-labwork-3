@@ -20,4 +20,6 @@ class Consts {
   static const darkColor = Color(0xff0a1b23);
   static const contrastColor = Color(0xffb5bda2);
 
+  static const trueDB = 1;
+  static const falseDB = 0;
 }
