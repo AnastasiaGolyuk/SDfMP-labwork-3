@@ -10,26 +10,23 @@ import 'package:relax_app/pages/main_page.dart';
 import 'package:relax_app/pages/sign_up_page.dart';
 import 'package:relax_app/widgets/text_field.dart';
 
-class ProfilePage extends StatefulWidget {
-  ProfilePage({Key? key, required this.user}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key? key, required this.user}) : super(key: key);
 
   User user;
 
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _HomePageState extends State<HomePage> {
 
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        CircleAvatar(radius: 50, foregroundImage: MemoryImage(widget.user.avatar),),
-        Text(widget.user.username)
-      ],
+
     );
   }
 }

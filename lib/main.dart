@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           title: 'Relax app',
           debugShowCheckedModeBanner: false,
-          home: const SplashScreenPage(),
+          home: SplashscreenPage(),
         );
       }
 }

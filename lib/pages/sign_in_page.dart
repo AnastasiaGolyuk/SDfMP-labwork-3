@@ -21,25 +21,9 @@ class _SignInPageState extends State<SignInPage> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  List<String> hints = List.empty(growable: true);
-
-  Future<List<String>?> getEmails(){
-    var results = DatabaseHelper.instance.getUserEmails();
-    return results;
-}
-
-  void initHints(){
-    getEmails().then((value) {
-      setState(() {
-        hints=value!;
-      });
-    });
-  }
-
 
   @override
   Widget build(BuildContext context) {
-    initHints();
     return Scaffold(
 
         backgroundColor: Consts.darkColor,
@@ -57,7 +41,8 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
         ),
-        body: Stack(
+        body: SingleChildScrollView(
+        child: Stack(
           children: [
             Container(
               decoration: BoxDecoration(
@@ -145,7 +130,7 @@ class _SignInPageState extends State<SignInPage> {
               ],
             )
           ],
-        ));
+        )));
   }
 
   void _showMessage(BuildContext context, String message, String content) async {
@@ -183,8 +168,8 @@ class _SignInPageState extends State<SignInPage> {
       return user.passwordHash==sha512.convert(utf8.encode(passwordController.text)).toString();
     } else {
       _showMessage(context, "User with this email doesn't exist!", "Check your input or sign up with this email.");
+      return false;
     }
-    return false;
   }
 
 }

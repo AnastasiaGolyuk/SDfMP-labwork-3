@@ -6,9 +6,17 @@ import 'package:relax_app/pages/main_page.dart';
 import 'package:relax_app/pages/welcome_page.dart';
 import 'package:splashscreen/splashscreen.dart';
 
+class SplashscreenPage extends StatefulWidget {
+  const SplashscreenPage({Key? key}) : super(key: key);
 
-class SplashScreenPage extends StatelessWidget {
-  const SplashScreenPage({Key? key}) : super(key: key);
+  @override
+  _SplashscreenPageState createState() => _SplashscreenPageState();
+}
+
+class _SplashscreenPageState extends State<SplashscreenPage> {
+
+  Widget widgetNavigate = WelcomePage();
+  
 
   Future<Widget> loadPage() async {
 
@@ -20,12 +28,21 @@ class SplashScreenPage extends StatelessWidget {
     }
   }
 
+  void initWidget(){
+    loadPage().then((value) {
+      setState(() {
+        widgetNavigate=value;
+      });
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
+    initWidget();
     return SplashScreen(
       seconds: 5,
-      navigateAfterSeconds: loadPage(),
+      navigateAfterSeconds: widgetNavigate,
       imageBackground: const AssetImage("assets/images/bg2.jpg"),
       image: const Image(
         image: AssetImage("assets/images/icon.png"),

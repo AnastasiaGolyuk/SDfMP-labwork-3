@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:relax_app/models/uploaded_image.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -18,7 +19,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'relax_app__users.db');
+    String path = join(documentsDirectory.path, 'draft3.db');
     return await openDatabase(
       path,
       version: 1,
@@ -33,8 +34,18 @@ class DatabaseHelper {
           username TEXT,
           email TEXT,
           passwordHash TEXT,
+          dateBirth TEXT,
           isAuthorized INTEGER,
           avatar BLOB
+      )
+      ''');
+
+    await db.execute('''
+      CREATE TABLE uploaded_image(
+          id INTEGER PRIMARY KEY,
+          idUser INTEGER,
+          bytes BLOB,
+          timeUpload TEXT
       )
       ''');
   }
@@ -48,13 +59,28 @@ class DatabaseHelper {
     return usersList;
   }
 
-  Future<List<String>?> getUserEmails() async {
-    var users = await getUsers();
-    List<String> results = List.empty(growable: true);
-    for (var element in users) {
-      results.add(element.email);
-    }
-    return results;
+  Future<List<UploadedImage>> getImages(int idUser) async {
+    Database db = await instance.database;
+    var results = await db.query('uploaded_image',where: 'idUser = ?', whereArgs: [idUser]);
+    List<UploadedImage> imagesList = results.isNotEmpty
+        ? results.map((c) => UploadedImage.fromJson(c)).toList()
+        : [];
+    return imagesList;
+  }
+
+  Future<int> getImagesCount() async {
+    Database db = await instance.database;
+    var results = await db.query('uploaded_image');
+    List<UploadedImage> imagesList = results.isNotEmpty
+        ? results.map((c) => UploadedImage.fromJson(c)).toList()
+        : [];
+    return imagesList.length;
+  }
+
+  Future<int> addImage(UploadedImage image) async {
+    Database db = await instance.database;
+    return await db.insert('uploaded_image', image.toJson(),
+        conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<User?> findAuthUser() async {
@@ -66,6 +92,11 @@ class DatabaseHelper {
       }
     }
     return user;
+  }
+
+  Future<int> updateUser(User user) async {
+    Database db = await instance.database;
+    return await db.update('users', user.toJson(),where: 'id = ?', whereArgs: [user.id]);
   }
 
 

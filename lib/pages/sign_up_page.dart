@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import "package:flutter/cupertino.dart";
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/db/db_helper.dart';
+import 'package:relax_app/models/uploaded_image.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:relax_app/pages/main_page.dart';
 import 'package:relax_app/pages/sign_in_page.dart';
@@ -23,6 +26,7 @@ class _SignUpPageState extends State<SignUpPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmedPasswordController = TextEditingController();
+  DateTime date=DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +46,9 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
         ),
-        body: Stack(
+        body: SingleChildScrollView(
+          child:
+        Stack(
           children: [
             Container(
               decoration: BoxDecoration(
@@ -76,13 +82,31 @@ class _SignUpPageState extends State<SignUpPage> {
                     )),
                 Padding(
                   padding: EdgeInsets.only(
-                      left: 30, right: 30, top: 100, bottom: 10),
+                      left: 30, right: 30, top: 60, bottom: 10),
                   child: Column(
                     children: <Widget>[
                       CustomTextField(
                         label: 'Username',
                         controller: usernameController,
                         isPasswordField:false,
+                      ),
+                      Container(
+                        padding: EdgeInsets.all(5),
+                        child:
+                      Text("Date of birth", style: TextStyle(fontSize: 15,
+                          color: Colors.white))),
+                      Container(
+                        height:80,
+                        child: CupertinoDatePicker(
+                          backgroundColor: Colors.white,
+                          mode: CupertinoDatePickerMode.date,
+                          initialDateTime: DateTime.now(),
+                          onDateTimeChanged: (DateTime value) {
+                            setState(() {
+                              date=DateUtils.dateOnly(value);
+                            });
+                          },
+                        )
                       ),
                       CustomTextField(
                         label: 'Email',
@@ -151,7 +175,7 @@ class _SignUpPageState extends State<SignUpPage> {
               ],
             )
           ],
-        ));
+        )));
   }
 
   void _showMessage(BuildContext context, String message, String content) async {
@@ -199,17 +223,26 @@ class _SignUpPageState extends State<SignUpPage> {
 
   Future<void> _save() async {
     Uint8List avatarBytes = Uint8List(1);
-    rootBundle.load("assets/image/profile_pic.jpg").then((value) {
+    Uint8List imgBytes = Uint8List(1);
+    rootBundle.load("assets/images/profile_pic.jpg").then((value) {
       avatarBytes=value.buffer.asUint8List();
     });
+    rootBundle.load("assets/images/default_img.jpg").then((value) {
+      imgBytes=value.buffer.asUint8List();
+    });
+    int id = await DatabaseHelper.instance.getUsersCount() + 1;
     await DatabaseHelper.instance.addUser(User(
-        id: await DatabaseHelper.instance.getUsersCount() + 1,
+        id: id,
         email: emailController.text,
         username: usernameController.text,
+        dateBirth: date.toString().substring(0,10),
         passwordHash: sha512
             .convert(utf8.encode(confirmedPasswordController.text))
             .toString(),
         isAuthorized: Consts.trueDB,
-    avatar: avatarBytes));
+        avatar: avatarBytes));
+    int imgID = await DatabaseHelper.instance.getImagesCount();
+    UploadedImage img = UploadedImage(id: imgID, bytes: imgBytes, idUser: id,timeUpload: DateTime.now().toString().substring(11));
+    await DatabaseHelper.instance.addImage(img);
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:relax_app/consts/consts.dart';
@@ -5,12 +7,13 @@ import 'package:relax_app/db/db_helper.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:relax_app/pages/sign_up_page.dart';
 import 'package:relax_app/pages/welcome_page.dart';
-import 'package:relax_app/widgets/player.dart';
-import 'package:relax_app/widgets/profile.dart';
+import 'package:relax_app/pages/player.dart';
+import 'package:relax_app/pages/profile.dart';
 import 'package:relax_app/widgets/text_field.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key, required this.index, required this.email}) : super(key: key);
+  const MainPage({Key? key, required this.index, required this.email})
+      : super(key: key);
 
   final int index;
 
@@ -21,22 +24,39 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-
   int _selectedIndex = 0;
-  late User _user;
+  User _user = User(
+      avatar: Uint8List(1),
+      id: 765,
+      username: "",
+      email: "",
+      passwordHash: "",
+      isAuthorized: 1,
+      dateBirth: '');
 
-  void initImage(){
+  void initImage() {
     DatabaseHelper.instance.findUser(widget.email).then((value) {
       setState(() {
-        _user=value!;
+        if (value != null) {
+          _user = User(
+              id: value.id,
+              username: value.username,
+              email: value.email,
+              dateBirth: value.dateBirth,
+              passwordHash: value.passwordHash,
+              avatar: value.avatar,
+              isAuthorized: value.isAuthorized);
+        }
       });
     });
   }
 
   @override
   void initState() {
-    _selectedIndex = widget.index;
     super.initState();
+    _selectedIndex = widget.index;
+    initImage();
+
   }
 
   void _onItemTapped(int index) {
@@ -47,30 +67,48 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
-    initImage();
     var pages = [
       const MusicPlayer(),
       const MusicPlayer(),
       ProfilePage(user: _user)
     ];
     return Scaffold(
+        backgroundColor: Consts.darkColor,
         appBar: AppBar(
-            centerTitle: true,
-            title: Image.asset("assets/images/icon.png",width: 35,),
-            leading: IconButton(icon: const Icon(Icons.menu), iconSize: 25,onPressed: () { openMenu(); },),
-            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-          actions: [CircleAvatar(backgroundImage: MemoryImage(_user.avatar), foregroundImage: MemoryImage(_user.avatar), radius: 25, )],
-            ),
+          centerTitle: true,
+          title: Image.asset(
+            "assets/images/icon.png",
+            width: 50,
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.menu),
+            iconSize: 25,
+            onPressed: () {
+              openMenu();
+            },
+          ),
+          backgroundColor: Consts.darkColor,
+          shadowColor: Colors.transparent,
+          actions: [
+            Container(
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                child: CircleAvatar(
+                  backgroundImage: MemoryImage(_user.avatar),
+                  foregroundImage: MemoryImage(_user.avatar),
+                  radius: 20,
+                ))
+          ],
+        ),
         bottomNavigationBar: BottomNavigationBar(
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Image.asset("assets/images/icon.png",width: 35),
+              icon: Image.asset("assets/images/icon.png", width: 35),
               activeIcon: ColorFiltered(
-                colorFilter: const ColorFilter.mode(
-                  Consts.contrastColor,
-                  BlendMode.modulate,
-                ),
-                child: Image.asset("assets/images/icon.png",width: 35)),
+                  colorFilter: const ColorFilter.mode(
+                    Consts.contrastColor,
+                    BlendMode.modulate,
+                  ),
+                  child: Image.asset("assets/images/icon.png", width: 35)),
               label: '.',
             ),
             BottomNavigationBarItem(
@@ -98,7 +136,7 @@ class _MainPageState extends State<MainPage> {
         ));
   }
 
-  void openMenu() {
+  void openMenu() async {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (BuildContext context) {
       return Scaffold(
@@ -133,12 +171,12 @@ class _MainPageState extends State<MainPage> {
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                  //   Navigator.pushAndRemoveUntil(
-                  //       context,
-                  //       MaterialPageRoute(
-                  //           builder: (context) => const IntroSliderPage()),
-                  //           (ret) => true);
-                   },
+                    //   Navigator.pushAndRemoveUntil(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //           builder: (context) => const IntroSliderPage()),
+                    //           (ret) => true);
+                  },
                   child: const Text('Hints')),
               Padding(
                   padding: const EdgeInsets.only(top: 50),
@@ -148,15 +186,19 @@ class _MainPageState extends State<MainPage> {
                         fixedSize: const Size.fromWidth(200),
                         textStyle: const TextStyle(fontSize: 20),
                       ),
-                       onPressed: () {
-                        _user.isAuthorized=0;
+                      onPressed: () {
+                        User usr = User(
+                            id: _user.id,
+                            username: _user.username,
+                            email: _user.email,
+                            passwordHash: _user.passwordHash,
+                            dateBirth: _user.dateBirth,
+                            avatar: _user.avatar,
+                            isAuthorized: 0);
+                        DatabaseHelper.instance.updateUser(usr);
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
                             builder: (context) => WelcomePage()));
-                         //   Navigator.pop(context);
-                      //   final provider =
-                      //   Provider.of<AuthHelper>(context, listen: false);
-                      //   provider.signOut();
-                       },
+                      },
                       child: const Text('Sign out')))
             ],
           ),

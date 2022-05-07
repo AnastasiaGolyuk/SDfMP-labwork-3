@@ -5,7 +5,8 @@ class User {
   final String username;
   final String email;
   final String passwordHash;
-  int isAuthorized;
+  final String dateBirth;
+  final int isAuthorized;
   final Uint8List avatar;
 
   User(
@@ -13,6 +14,7 @@ class User {
       required this.username,
       required this.email,
       required this.passwordHash,
+      required this.dateBirth,
       required this.isAuthorized,
       required this.avatar});
 
@@ -21,6 +23,7 @@ class User {
       username: json["username"],
       email: json["email"],
       passwordHash: json["passwordHash"],
+      dateBirth: json["dateBirth"],
       isAuthorized: json["isAuthorized"],
       avatar: json["avatar"]);
 
@@ -29,6 +32,7 @@ class User {
         "username": username,
         "email": email,
         "passwordHash": passwordHash,
+        "dateBirth": dateBirth,
         "isAuthorized": isAuthorized,
         "avatar": avatar
       };
