@@ -9,8 +9,10 @@ class Consts {
     return MediaQuery.of(context).size.height;
   }
 
-  static const productsAPIUrlBrand =
-      'http://makeup-api.herokuapp.com/api/v1/products.json?brand=';
+  static const horoscopeAPIUrl =
+      'https://nypost.com/horoscopes/';
+
+  static const zodiacSigns = <String>{"aquarius","pisces","aries","taurus","gemini","cancer","leo","virgo","libra","scorpio","sagittarius","capricorn"};
 
   static const okStatus = 200;
 
@@ -22,4 +24,15 @@ class Consts {
 
   static const trueDB = 1;
   static const falseDB = 0;
+
+  static const titles = {"Calm", "Anxious", "Happy", "Sad", "Relax"};
+
+
+  static const paths = {
+    "assets/images/calm.png",
+    "assets/images/anxious.png",
+    "assets/images/happy.png",
+    "assets/images/sad.png",
+    "assets/images/relax.png"
+  };
 }

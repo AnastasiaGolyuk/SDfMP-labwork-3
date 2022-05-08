@@ -2,12 +2,6 @@ import 'dart:convert';
 
 import 'dart:typed_data';
 
-List<UploadedImage> imagesFromJson(String str) =>
-    List<UploadedImage>.from(json.decode(str).map((x) => UploadedImage.fromJson(x)));
-
-String imagesToJson(List<UploadedImage> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
-
 class UploadedImage {
   final int id;
   final int idUser;

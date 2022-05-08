@@ -132,13 +132,14 @@ class _SignUpPageState extends State<SignUpPage> {
                     style: ElevatedButton.styleFrom(
                         primary: Consts.contrastColor,
                         fixedSize: Size(Consts.getWidth(context), 50)),
-                    onPressed: () {
-                      if (_checkPasswords()) {
+                    onPressed: () async {
+                      User? user = await _checkPasswords();
+                      if (user!=null) {
                         Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                                 builder: (context) => MainPage(
                                       index: 0,
-                                      email: emailController.text,
+                                      user: user,
                                     )));
                       } else {
                         _showMessage(context, "Passwords are not the same", "Please, check your input and try again.");
@@ -207,21 +208,21 @@ class _SignUpPageState extends State<SignUpPage> {
         });
   }
 
-  bool _checkPasswords() {
+  Future<User?> _checkPasswords() async {
     var hashFirst =
         sha512.convert(utf8.encode(passwordController.text)).toString();
     var hashSecond = sha512
         .convert(utf8.encode(confirmedPasswordController.text))
         .toString();
     if (hashFirst == hashSecond) {
-      _save();
-      return true;
+      User user = await _save();
+      return user;
     } else {
-      return false;
+      return null;
     }
   }
 
-  Future<void> _save() async {
+  Future<User> _save() async {
     Uint8List avatarBytes = Uint8List(1);
     Uint8List imgBytes = Uint8List(1);
     rootBundle.load("assets/images/profile_pic.jpg").then((value) {
@@ -231,18 +232,20 @@ class _SignUpPageState extends State<SignUpPage> {
       imgBytes=value.buffer.asUint8List();
     });
     int id = await DatabaseHelper.instance.getUsersCount() + 1;
-    await DatabaseHelper.instance.addUser(User(
+    User user = User(
         id: id,
         email: emailController.text,
         username: usernameController.text,
-        dateBirth: date.toString().substring(0,10),
+        dateBirth: date.toString(),
         passwordHash: sha512
             .convert(utf8.encode(confirmedPasswordController.text))
             .toString(),
         isAuthorized: Consts.trueDB,
-        avatar: avatarBytes));
+        avatar: avatarBytes);
+    await DatabaseHelper.instance.addUser(user);
     int imgID = await DatabaseHelper.instance.getImagesCount();
     UploadedImage img = UploadedImage(id: imgID, bytes: imgBytes, idUser: id,timeUpload: DateTime.now().toString().substring(11));
     await DatabaseHelper.instance.addImage(img);
+    return user;
   }
 }

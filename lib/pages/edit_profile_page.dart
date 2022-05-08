@@ -134,12 +134,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             fixedSize: Size(Consts.getWidth(context), 50)),
                         onPressed: () {
                           if (_checkPasswords()) {
-                            Navigator.of(context).pushReplacement(
-                                MaterialPageRoute(
-                                    builder: (context) => MainPage(
-                                      index: 0,
-                                      email: emailController.text,
-                                    )));
+                            // Navigator.of(context).pushReplacement(
+                            //     MaterialPageRoute(
+                            //         builder: (context) => MainPage(
+                            //           index: 0,
+                            //           email: emailController.text,
+                            //         )));
                           } else {
                             _showMessage(context, "Passwords are not the same", "Please, check your input and try again.");
                           }

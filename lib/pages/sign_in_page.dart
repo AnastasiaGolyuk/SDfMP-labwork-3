@@ -94,11 +94,11 @@ class _SignInPageState extends State<SignInPage> {
                       bool res = await _checkPasswordHash();
                       if (res) {
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
-                            builder: (context) => MainPage(index: 0, email: emailController.text)));
+                            builder: (context) => MainPage(index: 0, user: _user,)));
                       } else {
                         _showMessage(context, "Passwords are not the same!", "Please, check your input and try again.");
                       }
-    },
+                  },
                     child: Text(
                       "Sign in",
                       style:
@@ -162,9 +162,14 @@ class _SignInPageState extends State<SignInPage> {
         });
   }
 
+  late User _user;
+
   Future<bool> _checkPasswordHash() async{
     User? user = await DatabaseHelper.instance.findUser(emailController.text);
     if (user!=null){
+      setState(() {
+        _user=user;
+      });
       return user.passwordHash==sha512.convert(utf8.encode(passwordController.text)).toString();
     } else {
       _showMessage(context, "User with this email doesn't exist!", "Check your input or sign up with this email.");

@@ -5,19 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/db/db_helper.dart';
 import 'package:relax_app/models/user.dart';
+import 'package:relax_app/pages/about_page.dart';
+import 'package:relax_app/pages/home_page.dart';
 import 'package:relax_app/pages/sign_up_page.dart';
 import 'package:relax_app/pages/welcome_page.dart';
-import 'package:relax_app/pages/player.dart';
-import 'package:relax_app/pages/profile.dart';
+import 'package:relax_app/pages/player_page.dart';
+import 'package:relax_app/pages/profile_page.dart';
 import 'package:relax_app/widgets/text_field.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({Key? key, required this.index, required this.email})
+  const MainPage({Key? key, required this.index, required this.user})
       : super(key: key);
 
   final int index;
 
-  final String email;
+  final User user;
 
   @override
   _MainPageState createState() => _MainPageState();
@@ -25,38 +27,38 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _selectedIndex = 0;
-  User _user = User(
-      avatar: Uint8List(1),
-      id: 765,
-      username: "",
-      email: "",
-      passwordHash: "",
-      isAuthorized: 1,
-      dateBirth: '');
-
-  void initImage() {
-    DatabaseHelper.instance.findUser(widget.email).then((value) {
-      setState(() {
-        if (value != null) {
-          _user = User(
-              id: value.id,
-              username: value.username,
-              email: value.email,
-              dateBirth: value.dateBirth,
-              passwordHash: value.passwordHash,
-              avatar: value.avatar,
-              isAuthorized: value.isAuthorized);
-        }
-      });
-    });
-  }
+  
+  // User widget.user = User(
+  //     avatar: Uint8List(1),
+  //     id: 765,
+  //     username: "",
+  //     email: "",
+  //     passwordHash: "",
+  //     isAuthorized: 1,
+  //     dateBirth: '');
+  //
+  // void initUser() {
+  //   DatabaseHelper.instance.findUser(widget.email).then((value) {
+  //     setState(() {
+  //       if (value != null) {
+  //         widget.user = User(
+  //             id: value.id,
+  //             username: value.username,
+  //             email: value.email,
+  //             dateBirth: value.dateBirth,
+  //             passwordHash: value.passwordHash,
+  //             avatar: value.avatar,
+  //             isAuthorized: value.isAuthorized);
+  //       }
+  //     });
+  //   });
+  // }
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.index;
-    initImage();
-
+    //initUser();
   }
 
   void _onItemTapped(int index) {
@@ -68,9 +70,9 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     var pages = [
+      HomePage(user: widget.user),
       const MusicPlayer(),
-      const MusicPlayer(),
-      ProfilePage(user: _user)
+      ProfilePage(user: widget.user)
     ];
     return Scaffold(
         backgroundColor: Consts.darkColor,
@@ -91,10 +93,10 @@ class _MainPageState extends State<MainPage> {
           shadowColor: Colors.transparent,
           actions: [
             Container(
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
                 child: CircleAvatar(
-                  backgroundImage: MemoryImage(_user.avatar),
-                  foregroundImage: MemoryImage(_user.avatar),
+                  backgroundImage: MemoryImage(widget.user.avatar),
+                  foregroundImage: MemoryImage(widget.user.avatar),
                   radius: 20,
                 ))
           ],
@@ -111,11 +113,11 @@ class _MainPageState extends State<MainPage> {
                   child: Image.asset("assets/images/icon.png", width: 35)),
               label: '.',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.music_note_list),
               label: '.',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(CupertinoIcons.profile_circled),
               activeIcon: Icon(CupertinoIcons.person_crop_circle_fill),
               label: '.',
@@ -156,12 +158,12 @@ class _MainPageState extends State<MainPage> {
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    // Navigator.pushAndRemoveUntil(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) =>
-                    //         const MainPage(title: "Labwork 1")),
-                    //         (ret) => false);
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const AboutPage()),
+                            (ret) => true);
                   },
                   child: const Text('About developer')),
               ElevatedButton(
@@ -186,18 +188,18 @@ class _MainPageState extends State<MainPage> {
                         fixedSize: const Size.fromWidth(200),
                         textStyle: const TextStyle(fontSize: 20),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         User usr = User(
-                            id: _user.id,
-                            username: _user.username,
-                            email: _user.email,
-                            passwordHash: _user.passwordHash,
-                            dateBirth: _user.dateBirth,
-                            avatar: _user.avatar,
+                            id: widget.user.id,
+                            username: widget.user.username,
+                            email: widget.user.email,
+                            passwordHash: widget.user.passwordHash,
+                            dateBirth: widget.user.dateBirth,
+                            avatar: widget.user.avatar,
                             isAuthorized: 0);
-                        DatabaseHelper.instance.updateUser(usr);
+                        await DatabaseHelper.instance.updateUser(usr);
                         Navigator.of(context).pushReplacement(MaterialPageRoute(
-                            builder: (context) => WelcomePage()));
+                            builder: (context) => const WelcomePage()));
                       },
                       child: const Text('Sign out')))
             ],

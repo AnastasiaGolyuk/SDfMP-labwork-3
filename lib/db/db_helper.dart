@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:relax_app/consts/consts.dart';
+import 'package:relax_app/models/mood.dart';
 import 'package:relax_app/models/uploaded_image.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:sqflite/sqflite.dart';
@@ -19,7 +20,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'draft3.db');
+    String path = join(documentsDirectory.path, 'draft4.db');
     return await openDatabase(
       path,
       version: 1,
@@ -45,6 +46,15 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY,
           idUser INTEGER,
           bytes BLOB,
+          timeUpload TEXT
+      )
+      ''');
+
+    await db.execute('''
+      CREATE TABLE moods(
+          id INTEGER PRIMARY KEY,
+          idUser INTEGER,
+          mood TEXT,
           timeUpload TEXT
       )
       ''');
@@ -79,24 +89,98 @@ class DatabaseHelper {
 
   Future<int> addImage(UploadedImage image) async {
     Database db = await instance.database;
-    return await db.insert('uploaded_image', image.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('uploaded_image', image.toJson());
+  }
+
+
+
+  Future<List<Mood>> getMoods(int idUser) async {
+    Database db = await instance.database;
+    var results = await db.query('moods',where: 'idUser = ?', whereArgs: [idUser]);
+    List<Mood> moodsList = results.isNotEmpty
+        ? results.map((c) => Mood.fromJson(c)).toList()
+        : [];
+    return moodsList;
+  }
+
+  Future<int> getMoodsCount() async {
+    Database db = await instance.database;
+    var results = await db.query('moods');
+    List<Mood> moodsList = results.isNotEmpty
+        ? results.map((c) => Mood.fromJson(c)).toList()
+        : [];
+    return moodsList.length;
+  }
+
+  Future<int> addMood(Mood mood) async {
+    Database db = await instance.database;
+    return await db.insert('moods', mood.toJson());
+  }
+
+  Future<Mood?> getRecentMood(int idUser) async {
+    var moods = await getMoods(idUser);
+    if (moods.isEmpty){
+      return null;
+    }
+    var diffDates = <int>[];
+    int min = 1000;
+    int index=0;
+    int i = 0;
+    for (Mood mood in moods){
+      var diff = DateTime.now().difference(DateTime.parse(mood.timeUpload)).inDays;
+      diffDates.add(diff);
+      if (diff<=min){
+        min=diff;
+        index=i;
+      }
+      i++;
+    }
+    return moods[index];
+  }
+
+  Future<Mood?> getCommonMood(int idUser) async {
+    var moods = await getMoods(idUser);
+    if (moods.isEmpty){
+      return null;
+    }
+    var countMoods = List.filled(Consts.titles.length, 0);
+    int max = 0;
+    int index=0;
+    int iDB = 0;
+    for (int a=0;a<Consts.titles.length;a++){
+      String mood = Consts.titles.elementAt(a);
+      for (iDB=0;iDB<moods.length;iDB++) {
+        if (moods[iDB].mood == mood) {
+          countMoods[a]++;
+        }
+      }
+    }
+
+    for(int i=0;i<countMoods.length;i++){
+      if (countMoods[i]>max){
+        max=countMoods[i];
+        index=i;
+      }
+    }
+    return moods[index];
   }
 
   Future<User?> findAuthUser() async {
     var results = await getUsers();
     User? user;
     for (var element in results) {
+      print("id ${element.id} ${element.username}  auth ${element.isAuthorized}");
       if (element.isAuthorized==1){
         user=element;
+        return user;
       }
     }
-    return user;
+    return null;
   }
 
   Future<int> updateUser(User user) async {
     Database db = await instance.database;
-    return await db.update('users', user.toJson(),where: 'id = ?', whereArgs: [user.id]);
+    return await db.update('users', user.toJson(), where: 'id = ?', whereArgs: [user.id]);
   }
 
 
@@ -107,8 +191,7 @@ class DatabaseHelper {
 
   Future<int> addUser(User user) async {
     Database db = await instance.database;
-    return await db.insert('users', user.toJson(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('users', user.toJson());
   }
 
   Future<User?> findUser(String email) async {
@@ -117,8 +200,9 @@ class DatabaseHelper {
     for (var element in results) {
       if (element.email==email){
         user=element;
+        return user;
       }
     }
-    return user;
+    return null;
   }
 }
