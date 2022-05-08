@@ -20,7 +20,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'draft4.db');
+    String path = join(documentsDirectory.path, 'relax_app_lab3.db');
     return await openDatabase(
       path,
       version: 1,
@@ -35,6 +35,8 @@ class DatabaseHelper {
           username TEXT,
           email TEXT,
           passwordHash TEXT,
+          bloodPressure INTEGER,
+          weight INTEGER,
           dateBirth TEXT,
           isAuthorized INTEGER,
           avatar BLOB
@@ -162,7 +164,9 @@ class DatabaseHelper {
         index=i;
       }
     }
-    return moods[index];
+    return moods.lastWhere((element) =>
+      element.mood==Consts.titles.elementAt(index)
+    );
   }
 
   Future<User?> findAuthUser() async {

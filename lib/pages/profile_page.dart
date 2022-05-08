@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:crypto/crypto.dart';
@@ -12,6 +13,7 @@ import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/db/db_helper.dart';
 import 'package:relax_app/models/uploaded_image.dart';
 import 'package:relax_app/models/user.dart';
+import 'package:relax_app/pages/edit_profile_page.dart';
 import 'package:relax_app/pages/main_page.dart';
 import 'package:relax_app/pages/sign_up_page.dart';
 import 'package:relax_app/pages/view_photo_page.dart';
@@ -27,7 +29,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  var images = <UploadedImage>[];
+  var images = <UploadedImage>[].obs;
 
   Future<List<UploadedImage>> getImages() async {
     var res = await DatabaseHelper.instance.getImages(widget.user.id);
@@ -37,7 +39,8 @@ class _ProfilePageState extends State<ProfilePage> {
   void initImages() {
     getImages().then((value) {
       setState(() {
-        images = value.reversed.toList();
+        images = value.reversed.toList().obs;
+        images.refresh();
       });
     });
   }
@@ -62,6 +65,7 @@ class _ProfilePageState extends State<ProfilePage> {
         this.image = imageTemp;
         addImageToDB(this.image);
         initImages();
+        images.refresh();
       });
     } on PlatformException catch (e) {
       print('Failed to pick image: $e');
@@ -75,7 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
         id: id,
         idUser: widget.user.id,
         bytes: imgBytes,
-        timeUpload: DateTime.now().toString().substring(0,16));
+        timeUpload: DateTime.now().toString().substring(0, 16));
     await DatabaseHelper.instance.addImage(img);
   }
 
@@ -96,12 +100,17 @@ class _ProfilePageState extends State<ProfilePage> {
                 primary: Consts.contrastColor,
               ),
               onPressed: () {
-                index == list.length - 1 ? pickImage() : {Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            ViewPhotoPage(bytes: list[index].bytes,)),
-                        (ret) => true)};
+                index == list.length - 1
+                    ? pickImage()
+                    : {
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ViewPhotoPage(
+                                      bytes: list[index].bytes,
+                                    )),
+                            (ret) => true)
+                      };
               },
               child: Stack(
                 alignment: Alignment.center,
@@ -155,7 +164,25 @@ class _ProfilePageState extends State<ProfilePage> {
                     textAlign: TextAlign.left,
                   ),
                   Text(
-                    "Date of birth: ${widget.user.dateBirth.substring(0, 10)} (${ DateTime.now().difference(DateTime.parse(widget.user.dateBirth)).inDays~/365})",
+                    "Date of birth: ${widget.user.dateBirth.substring(0, 10)} (${DateTime.now().difference(DateTime.parse(widget.user.dateBirth)).inDays ~/ 365})",
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    textAlign: TextAlign.left,
+                  ),
+                  Text(
+                    widget.user.weight == 0
+                        ? "Weight: -"
+                        : "Weight: ${widget.user.weight}",
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    textAlign: TextAlign.left,
+                  ),
+                  Text(
+                    widget.user.bloodPressure == 0
+                        ? "Blood pressure: -"
+                        : "Blood pressure: ${widget.user.bloodPressure}",
                     style: TextStyle(fontSize: 15, color: Colors.white),
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
@@ -170,7 +197,20 @@ class _ProfilePageState extends State<ProfilePage> {
                     textAlign: TextAlign.left,
                   ),
                 ]),
-              ), IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.pencil),iconSize: 20, color: Colors.white,)
+              ),
+              IconButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                          EditProfilePage(user: widget.user)),
+                          (ret) => true);
+                },
+                icon: Icon(CupertinoIcons.pencil),
+                iconSize: 20,
+                color: Colors.white,
+              )
             ],
           ),
           Expanded(

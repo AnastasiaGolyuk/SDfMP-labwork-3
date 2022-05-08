@@ -35,4 +35,18 @@ class Consts {
     "assets/images/sad.png",
     "assets/images/relax.png"
   };
+
+  static const pathsRec = {
+    "assets/images/moments.jpg",
+    "assets/images/productive.jpg",
+    "assets/images/rainy.jpg",
+    "assets/images/read.jpg",
+    "assets/images/chill.jpg"
+  };
+
+  static String musicPath = 'assets/music/calm.mp3';
+  static String imagePath = pathsRec.elementAt(3);
+  static String text = 'Good time to read a book!';
+
+  static int pressedIndex = 0;
 }

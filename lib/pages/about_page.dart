@@ -33,7 +33,7 @@ class _AboutPageState extends State<AboutPage> {
                 "Labwork 3",
                 style: TextStyle(
                     fontSize: 25,
-                    color: Theme.of(context).primaryColor,
+                    color: Consts.contrastColor,
                     fontWeight: FontWeight.bold,
                     fontFamily: Consts.titleFont),
                 textAlign: TextAlign.center,
@@ -52,7 +52,7 @@ class _AboutPageState extends State<AboutPage> {
               child: Text(
                 "Anastasia Golyuk",
                 style: TextStyle(
-                    fontSize: 20, color: Theme.of(context).primaryColor),
+                    fontSize: 20, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -62,7 +62,7 @@ class _AboutPageState extends State<AboutPage> {
               child: Text(
                 "951006",
                 style: TextStyle(
-                    fontSize: 20, color: Theme.of(context).primaryColor),
+                    fontSize: 20, color: Colors.white),
                 textAlign: TextAlign.center,
               ),
             )

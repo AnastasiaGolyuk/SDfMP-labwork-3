@@ -36,10 +36,15 @@ class _SplashscreenPageState extends State<SplashscreenPage> {
     });
   }
 
+  @override
+  void initState(){
+    super.initState();
+    initWidget();
+  }
+
 
   @override
   Widget build(BuildContext context) {
-    initWidget();
     return SplashScreen(
       seconds: 5,
       navigateAfterSeconds: widgetNavigate,

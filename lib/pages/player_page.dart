@@ -2,12 +2,23 @@ import 'package:audio_session/audio_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/widgets/common.dart';
 import 'package:rxdart/rxdart.dart';
 
-
 class MusicPlayer extends StatefulWidget {
-  const MusicPlayer({Key? key}) : super(key: key);
+  const MusicPlayer(
+      {Key? key,
+      required this.musicPath,
+      required this.imagePath,
+      required this.text})
+      : super(key: key);
+
+  final String musicPath;
+
+  final String imagePath;
+
+  final String text;
 
   @override
   _MusicPlayerState createState() => _MusicPlayerState();
@@ -31,12 +42,10 @@ class _MusicPlayerState extends State<MusicPlayer> with WidgetsBindingObserver {
     await session.configure(const AudioSessionConfiguration.speech());
     _player.playbackEventStream.listen((event) {},
         onError: (Object e, StackTrace stackTrace) {
-          print('A stream error occurred: $e');
-        });
+      print('A stream error occurred: $e');
+    });
     try {
-      await _player.setAsset("assets/music/day.mp3");
-          // .setAudioSource(AudioSource.uri(Uri.parse(
-          // "https://s3.amazonaws.com/scifri-episodes/scifri20181123-episode.mp3")));
+      await _player.setAsset(widget.musicPath);
     } catch (e) {
       print("Error loading audio source: $e");
     }
@@ -61,38 +70,68 @@ class _MusicPlayerState extends State<MusicPlayer> with WidgetsBindingObserver {
           _player.positionStream,
           _player.bufferedPositionStream,
           _player.durationStream,
-              (position, bufferedPosition, duration) => PositionData(
+          (position, bufferedPosition, duration) => PositionData(
               position, bufferedPosition, duration ?? Duration.zero));
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ControlButtons(_player),
-              StreamBuilder<PositionData>(
-                stream: _positionDataStream,
-                builder: (context, snapshot) {
-                  final positionData = snapshot.data;
-                  return SeekBar(
-                    duration: positionData?.duration ?? Duration.zero,
-                    position: positionData?.position ?? Duration.zero,
-                    bufferedPosition:
-                    positionData?.bufferedPosition ?? Duration.zero,
-                    onChangeEnd: _player.seek,
-                  );
-                },
-              ),
-            ],
+    if (widget.musicPath == '' && widget.text == '' && widget.imagePath == '') {
+      return Container(
+        padding: EdgeInsets.all(5),
+        alignment: Alignment.center,
+        child: Text("No recomendations for you.", style: TextStyle(color: Colors.white, fontSize: 15),),
+      );
+    } else {
+      return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: Scaffold(
+          backgroundColor: Consts.darkColor,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(15),
+                  height: 400,
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 270,
+                          height: 270,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(image: AssetImage(widget.imagePath), fit: BoxFit.cover),
+                        )),
+                      Container(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          widget.text,
+                          style: TextStyle(fontSize: 20, color: Colors.white),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                ControlButtons(_player),
+                StreamBuilder<PositionData>(
+                  stream: _positionDataStream,
+                  builder: (context, snapshot) {
+                    final positionData = snapshot.data;
+                    return SeekBar(
+                      duration: positionData?.duration ?? Duration.zero,
+                      position: positionData?.position ?? Duration.zero,
+                      bufferedPosition:
+                          positionData?.bufferedPosition ?? Duration.zero,
+                      onChangeEnd: _player.seek,
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 }
 
@@ -108,7 +147,10 @@ class ControlButtons extends StatelessWidget {
       children: [
         // Opens volume slider dialog
         IconButton(
-          icon: const Icon(Icons.volume_up),
+          icon: const Icon(
+            Icons.volume_up,
+            color: Colors.white,
+          ),
           onPressed: () {
             showSliderDialog(
               context: context,
@@ -135,23 +177,34 @@ class ControlButtons extends StatelessWidget {
                 margin: const EdgeInsets.all(8.0),
                 width: 64.0,
                 height: 64.0,
-                child: const CircularProgressIndicator(),
+                child: const CircularProgressIndicator(
+                  color: Consts.contrastColor,
+                ),
               );
             } else if (playing != true) {
               return IconButton(
-                icon: const Icon(Icons.play_arrow),
+                icon: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.white,
+                ),
                 iconSize: 64.0,
                 onPressed: player.play,
               );
             } else if (processingState != ProcessingState.completed) {
               return IconButton(
-                icon: const Icon(Icons.pause),
+                icon: const Icon(
+                  Icons.pause,
+                  color: Colors.white,
+                ),
                 iconSize: 64.0,
                 onPressed: player.pause,
               );
             } else {
               return IconButton(
-                icon: const Icon(Icons.replay),
+                icon: const Icon(
+                  Icons.replay,
+                  color: Colors.white,
+                ),
                 iconSize: 64.0,
                 onPressed: () => player.seek(Duration.zero),
               );
@@ -163,7 +216,8 @@ class ControlButtons extends StatelessWidget {
           stream: player.speedStream,
           builder: (context, snapshot) => IconButton(
             icon: Text("${snapshot.data?.toStringAsFixed(1)}x",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.white)),
             onPressed: () {
               showSliderDialog(
                 context: context,

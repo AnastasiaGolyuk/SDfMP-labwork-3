@@ -44,13 +44,6 @@ class _SignInPageState extends State<SignInPage> {
         body: SingleChildScrollView(
         child: Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      opacity: 0.3,
-                      image: AssetImage("assets/images/leaf1.png"),
-                      fit: BoxFit.cover)),
-            ),
             Column(
               //mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,8 +72,8 @@ class _SignInPageState extends State<SignInPage> {
                       left: 30, right: 30, top: 100, bottom: 10),
                   child: Column(
                     children: <Widget>[
-                      CustomTextField(label: 'Email', controller: emailController, isPasswordField: false),
-                      CustomTextField(label: 'Password', controller: passwordController, isPasswordField: true,)
+                      CustomTextField(inputType: TextInputType.emailAddress,initialValue: "",label: 'Email', controller: emailController, isPasswordField: false),
+                      CustomTextField(inputType: TextInputType.text,initialValue: "",label: 'Password', controller: passwordController, isPasswordField: true,)
                     ],
                   ),
                 ),
@@ -91,12 +84,20 @@ class _SignInPageState extends State<SignInPage> {
                         primary: Consts.contrastColor,
                         fixedSize: Size(Consts.getWidth(context), 50)),
                     onPressed: () async {
-                      bool res = await _checkPasswordHash();
-                      if (res) {
-                        Navigator.of(context).pushReplacement(MaterialPageRoute(
-                            builder: (context) => MainPage(index: 0, user: _user,)));
-                      } else {
-                        _showMessage(context, "Passwords are not the same!", "Please, check your input and try again.");
+                      if (validate()) {
+                        var exist = await _checkUser();
+                        if (exist) {
+                          bool res = await _checkPasswordHash();
+                          if (res) {
+                            Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainPage(index: 0, user: _user,)));
+                          } else {
+                            _showMessage(context, "Passwords are not the same!",
+                                "Please, check your input and try again.");
+                          }
+                        }
                       }
                   },
                     child: Text(
@@ -128,7 +129,13 @@ class _SignInPageState extends State<SignInPage> {
                   ],
                 ),
               ],
-            )
+            ), Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      opacity: 0.3,
+                      image: AssetImage("assets/images/leaf1.png"),
+                      fit: BoxFit.cover)),
+            ),
           ],
         )));
   }
@@ -162,19 +169,41 @@ class _SignInPageState extends State<SignInPage> {
         });
   }
 
+  String checkFields(){
+    if (!emailController.text.contains(RegExp(r'(?=.*[@.])'))){
+      return "Email must contain \'@\' and \'.\' symbols!";
+    }
+    else {
+      return "";
+    }
+  }
+
+  bool validate(){
+    String error = checkFields();
+    if (error!=""){
+      _showMessage(context, "Validation error", error);
+      return false;
+    }
+    return true;
+  }
+
   late User _user;
 
-  Future<bool> _checkPasswordHash() async{
+  Future<bool> _checkUser() async {
     User? user = await DatabaseHelper.instance.findUser(emailController.text);
     if (user!=null){
       setState(() {
         _user=user;
       });
-      return user.passwordHash==sha512.convert(utf8.encode(passwordController.text)).toString();
+      return true;
     } else {
       _showMessage(context, "User with this email doesn't exist!", "Check your input or sign up with this email.");
       return false;
     }
+  }
+
+  Future<bool> _checkPasswordHash() async{
+      return _user.passwordHash==sha512.convert(utf8.encode(passwordController.text)).toString();
   }
 
 }

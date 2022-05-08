@@ -5,12 +5,15 @@ class CustomTextField extends StatefulWidget {
       {Key? key,
       required this.label,
       required this.controller,
-      required this.isPasswordField})
+      required this.isPasswordField,
+      required this.initialValue, required this.inputType,})
       : super(key: key);
 
   final String label;
   final TextEditingController controller;
   final bool isPasswordField;
+  final String initialValue;
+  final TextInputType inputType;
 
   @override
   _CustomTextFieldState createState() => _CustomTextFieldState();
@@ -21,8 +24,8 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   void initState() {
-    // TODO: implement initState
     _passwordVisible = false;
+    widget.controller.text=widget.initialValue;
     super.initState();
   }
 
@@ -32,6 +35,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       return TextFormField(
         controller: widget.controller,
         obscureText: !_passwordVisible,
+        keyboardType: widget.inputType,
         style: TextStyle(color: Colors.white, fontSize: 15),
         decoration: InputDecoration(
           labelStyle: TextStyle(color: Colors.white, fontSize: 15),
@@ -59,6 +63,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       return TextFormField(
         controller: widget.controller,
         style: TextStyle(color: Colors.white, fontSize: 15),
+        keyboardType: widget.inputType,
         decoration: InputDecoration(
           labelStyle: TextStyle(color: Colors.white, fontSize: 15),
           labelText: widget.label,

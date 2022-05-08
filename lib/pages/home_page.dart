@@ -167,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        RecommendationsPage(moods: moods)),
+                                        RecommendationsPage(moods: moods, user: widget.user,)),
                                 (ret) => true);
                       },
                       child: Text("View"),

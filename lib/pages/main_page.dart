@@ -6,12 +6,12 @@ import 'package:relax_app/consts/consts.dart';
 import 'package:relax_app/db/db_helper.dart';
 import 'package:relax_app/models/user.dart';
 import 'package:relax_app/pages/about_page.dart';
+import 'package:relax_app/pages/count_bmi_page.dart';
 import 'package:relax_app/pages/home_page.dart';
-import 'package:relax_app/pages/sign_up_page.dart';
+import 'package:relax_app/pages/slider_page.dart';
 import 'package:relax_app/pages/welcome_page.dart';
 import 'package:relax_app/pages/player_page.dart';
 import 'package:relax_app/pages/profile_page.dart';
-import 'package:relax_app/widgets/text_field.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({Key? key, required this.index, required this.user})
@@ -26,44 +26,17 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
-  
-  // User widget.user = User(
-  //     avatar: Uint8List(1),
-  //     id: 765,
-  //     username: "",
-  //     email: "",
-  //     passwordHash: "",
-  //     isAuthorized: 1,
-  //     dateBirth: '');
-  //
-  // void initUser() {
-  //   DatabaseHelper.instance.findUser(widget.email).then((value) {
-  //     setState(() {
-  //       if (value != null) {
-  //         widget.user = User(
-  //             id: value.id,
-  //             username: value.username,
-  //             email: value.email,
-  //             dateBirth: value.dateBirth,
-  //             passwordHash: value.passwordHash,
-  //             avatar: value.avatar,
-  //             isAuthorized: value.isAuthorized);
-  //       }
-  //     });
-  //   });
-  // }
+  //int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _selectedIndex = widget.index;
-    //initUser();
+    Consts.pressedIndex = widget.index;
   }
 
   void _onItemTapped(int index) {
     setState(() {
-      _selectedIndex = index;
+      Consts.pressedIndex = index;
     });
   }
 
@@ -71,7 +44,11 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     var pages = [
       HomePage(user: widget.user),
-      const MusicPlayer(),
+      MusicPlayer(
+        text: Consts.text,
+        musicPath: Consts.musicPath,
+        imagePath: Consts.imagePath,
+      ),
       ProfilePage(user: widget.user)
     ];
     return Scaffold(
@@ -92,13 +69,19 @@ class _MainPageState extends State<MainPage> {
           backgroundColor: Consts.darkColor,
           shadowColor: Colors.transparent,
           actions: [
-            Container(
-                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-                child: CircleAvatar(
-                  backgroundImage: MemoryImage(widget.user.avatar),
-                  foregroundImage: MemoryImage(widget.user.avatar),
-                  radius: 20,
-                ))
+            InkWell(
+              child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+                  child: CircleAvatar(
+                    backgroundImage: MemoryImage(widget.user.avatar),
+                    foregroundImage: MemoryImage(widget.user.avatar),
+                    radius: 20,
+                  )),
+              onTap: () {
+                _onItemTapped(2);
+              },
+            )
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -128,13 +111,13 @@ class _MainPageState extends State<MainPage> {
           showSelectedLabels: false,
           showUnselectedLabels: false,
           unselectedItemColor: Colors.white,
-          currentIndex: _selectedIndex,
+          currentIndex: Consts.pressedIndex,
           selectedItemColor: Consts.contrastColor,
           onTap: _onItemTapped,
         ),
         body: Padding(
           padding: const EdgeInsets.all(5),
-          child: pages[_selectedIndex],
+          child: pages[Consts.pressedIndex],
         ));
   }
 
@@ -145,6 +128,7 @@ class _MainPageState extends State<MainPage> {
         backgroundColor: Consts.darkColor,
         appBar: AppBar(
             backgroundColor: Consts.darkColor,
+            shadowColor: Colors.transparent,
             title: const Text('Menu'),
             centerTitle: true),
         body: Center(
@@ -161,9 +145,8 @@ class _MainPageState extends State<MainPage> {
                     Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
-                            builder: (context) =>
-                                const AboutPage()),
-                            (ret) => true);
+                            builder: (context) => const AboutPage()),
+                        (ret) => true);
                   },
                   child: const Text('About developer')),
               ElevatedButton(
@@ -173,13 +156,27 @@ class _MainPageState extends State<MainPage> {
                     textStyle: const TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    //   Navigator.pushAndRemoveUntil(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //           builder: (context) => const IntroSliderPage()),
-                    //           (ret) => true);
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const IntroSliderPage()),
+                              (ret) => true);
                   },
                   child: const Text('Hints')),
+              ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Consts.contrastColor,
+                    fixedSize: const Size.fromWidth(200),
+                    textStyle: const TextStyle(fontSize: 20),
+                  ),
+                  onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => CountBMIPage()),
+                              (ret) => true);
+                  },
+                  child: const Text('Calculate BMI')),
               Padding(
                   padding: const EdgeInsets.only(top: 50),
                   child: ElevatedButton(
@@ -194,6 +191,8 @@ class _MainPageState extends State<MainPage> {
                             username: widget.user.username,
                             email: widget.user.email,
                             passwordHash: widget.user.passwordHash,
+                            bloodPressure: widget.user.bloodPressure,
+                            weight: widget.user.weight,
                             dateBirth: widget.user.dateBirth,
                             avatar: widget.user.avatar,
                             isAuthorized: 0);

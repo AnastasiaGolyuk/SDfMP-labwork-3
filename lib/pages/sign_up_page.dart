@@ -50,13 +50,6 @@ class _SignUpPageState extends State<SignUpPage> {
           child:
         Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                  image: DecorationImage(
-                      opacity: 0.3,
-                      image: AssetImage("assets/images/leaf1.png"),
-                      fit: BoxFit.cover)),
-            ),
             Column(
               //mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,18 +75,20 @@ class _SignUpPageState extends State<SignUpPage> {
                     )),
                 Padding(
                   padding: EdgeInsets.only(
-                      left: 30, right: 30, top: 60, bottom: 10),
+                      left: 30, right: 30, top: 40, bottom: 10),
                   child: Column(
                     children: <Widget>[
                       CustomTextField(
-                        label: 'Username',
+                        inputType: TextInputType.text,
+                        initialValue: "",
+                        label: 'Username*',
                         controller: usernameController,
                         isPasswordField:false,
                       ),
                       Container(
                         padding: EdgeInsets.all(5),
                         child:
-                      Text("Date of birth", style: TextStyle(fontSize: 15,
+                      Text("Date of birth*", style: TextStyle(fontSize: 15,
                           color: Colors.white))),
                       Container(
                         height:80,
@@ -109,17 +104,23 @@ class _SignUpPageState extends State<SignUpPage> {
                         )
                       ),
                       CustomTextField(
-                        label: 'Email',
+                        inputType: TextInputType.emailAddress,
+                        initialValue: "",
+                        label: 'Email*',
                         controller: emailController,
                         isPasswordField: false,
                       ),
                       CustomTextField(
-                        label: 'Password',
+                        inputType: TextInputType.text,
+                        initialValue: "",
+                        label: 'Password*',
                         controller: passwordController,
                         isPasswordField: true,
                       ),
                       CustomTextField(
-                        label: 'Confirm password',
+                        inputType: TextInputType.text,
+                        initialValue: "",
+                        label: 'Confirm password*',
                         controller: confirmedPasswordController,
                         isPasswordField: true,
                       )
@@ -133,6 +134,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         primary: Consts.contrastColor,
                         fixedSize: Size(Consts.getWidth(context), 50)),
                     onPressed: () async {
+                      if (validate()){
                       User? user = await _checkPasswords();
                       if (user!=null) {
                         Navigator.of(context).pushReplacement(
@@ -144,7 +146,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       } else {
                         _showMessage(context, "Passwords are not the same", "Please, check your input and try again.");
                       }
-                    },
+                    }},
                     child: Text(
                       "Sign up",
                       style:
@@ -174,7 +176,13 @@ class _SignUpPageState extends State<SignUpPage> {
                   ],
                 )
               ],
-            )
+            ), Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      opacity: 0.3,
+                      image: AssetImage("assets/images/leaf1.png"),
+                      fit: BoxFit.cover)),
+            ),
           ],
         )));
   }
@@ -208,7 +216,34 @@ class _SignUpPageState extends State<SignUpPage> {
         });
   }
 
+  String checkFields(){
+    if (usernameController.text.isEmpty){
+      return "Username shouldn't be empty!";
+    }
+    if (!emailController.text.contains(RegExp(r'(?=.*[@.])'))){
+      return "Email must contain \'@\' and \'.\' symbols!";
+    }
+    if (DateTime.now().difference(date).inDays<=0){
+      return "Date must be earlier than today!";
+    }
+    if (!passwordController.text.contains(RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$'))){
+      return "Password\'s length must be at least 8 symbols and contains at least one upper and lower case letters and digit!";
+    } else {
+      return "";
+    }
+  }
+
+  bool validate(){
+    String error = checkFields();
+    if (error!=""){
+      _showMessage(context, "Validation error", error);
+      return false;
+    }
+    return true;
+  }
+
   Future<User?> _checkPasswords() async {
+
     var hashFirst =
         sha512.convert(utf8.encode(passwordController.text)).toString();
     var hashSecond = sha512
@@ -237,13 +272,15 @@ class _SignUpPageState extends State<SignUpPage> {
         email: emailController.text,
         username: usernameController.text,
         dateBirth: date.toString(),
+        bloodPressure: 0,
+        weight: 0,
         passwordHash: sha512
             .convert(utf8.encode(confirmedPasswordController.text))
             .toString(),
         isAuthorized: Consts.trueDB,
         avatar: avatarBytes);
     await DatabaseHelper.instance.addUser(user);
-    int imgID = await DatabaseHelper.instance.getImagesCount();
+    int imgID = await DatabaseHelper.instance.getImagesCount()+1;
     UploadedImage img = UploadedImage(id: imgID, bytes: imgBytes, idUser: id,timeUpload: DateTime.now().toString().substring(11));
     await DatabaseHelper.instance.addImage(img);
     return user;
